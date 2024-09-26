@@ -1,0 +1,87 @@
+policies:
+  - name: tmcc-unused-ec2
+    description: |
+      To find Unused EC2 that has CPU Utlization under 10 % and Network Utilization under 5mb for 30 days.
+    resource: ec2
+    filters:
+      - State.Name : running
+      - type: value
+        key: "LaunchTime"
+        value_type: age
+        op: gt
+        value: 30
+      - and:
+          - type: metrics
+            name: CPUUtilization
+            statistics: Maximum
+            days: 30
+            value: 10
+            op: less-than
+          - type: metrics
+            name: NetworkIn
+            statistics: Maximum
+            days: 30
+            value: 5242880
+            op: less-than
+          - type: metrics
+            name: NetworkOut
+            statistics: Maximum
+            days: 30
+            value: 5242880
+            op: less-than
+
+  - name: tmcc-unused-app-elb
+    description: | 
+      To find Load Balancer ( App & Network ) that has no incoming request for 30 days.
+    resource: app-elb
+    filters:
+      - and:
+        - "tag:ingress.k8s.aws/resource": "absent"
+        - type: value
+          key: "CreatedTime"
+          value_type: age
+          op: gt
+          value: 30
+        - type: metrics
+          name: RequestCount
+          days: 30
+          statistics: Sum
+          value: 0
+          op: equal
+
+  - name: tmcc-unused-rds-instances
+    description: |
+      To find RDS instance with no DB connection for last 30 days and 
+      Max CPU Utilization <5% for last 30 days and
+      ReadIOPS & WriteIOPS is <5 count/sec for last 30 days
+    resource: rds
+    filters:
+      - type: value
+        key: "InstanceCreateTime"
+        value_type: age
+        op: gt
+        value: 30
+      - and:
+        - type: metrics
+          name: DatabaseConnections
+          days: 30
+          value: 0
+          op: equal
+        - type: metrics
+          name: CPUUtilization
+          statistics: Maximum
+          days: 30
+          value: 5
+          op: lt
+        - type: metrics
+          name: ReadIOPS
+          statistics: Maximum
+          days: 30
+          value: 5
+          op: lt
+        - type: metrics
+          name: WriteIOPS
+          statistics: Maximum
+          days: 30
+          value: 5
+          op: lt

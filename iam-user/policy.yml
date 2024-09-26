@@ -1,0 +1,29 @@
+policies:
+  - name: tmcc-unused-iam-user-credentials
+    description: |
+      To deactive access-keys that are not used for more than 90 days
+    resource: iam-user
+    mode:
+      type: periodic
+      schedule: "rate(1 day)"  # Adjust the schedule as needed
+      role: arn:aws:iam::{account_id}:role/CloudCustodianRole
+      memory: 2048
+      timeout: 900
+      environment: 
+          Variables:
+            AWS_RETRY_MODE: adaptive
+            AWS_MAX_ATTEMPTS: "10"
+      execution-options:
+        output_dir: s3://custodian-logs-bucket-1609/tmcc-unused-iam-user-credentials/{account_id}/{region}/{now}/
+    filters:
+      - type: credential
+        key: access_keys.active
+        value: true
+      - type: credential
+        key: access_keys.last_used_date
+        value_type: age
+        value: 90
+        op: gt
+    actions:
+      - type: remove-keys
+        disable: true

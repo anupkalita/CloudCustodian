@@ -1,0 +1,29 @@
+policies:
+  - name: tmcc-sg-remove-ingress-open-to-world-realtime
+    description: |
+      Custodian policy - Security Group ingress auto delete
+    resource: security-group
+    mode:
+      type: cloudtrail
+      role: arn:aws:iam::{account_id}:role/CloudCustodianRole
+      events:
+        - source: ec2.amazonaws.com
+          event: CreateSecurityGroup
+          ids: responseElements.groupId
+        - source: ec2.amazonaws.com
+          event: ModifySecurityGroupRules
+          ids: requestParameters.ModifySecurityGroupRulesRequest.GroupId
+        - source: ec2.amazonaws.com
+          event: AuthorizeSecurityGroupIngress
+          ids: responseElements.securityGroupRuleSet.items[].groupId
+      execution-options:
+        output_dir: s3://custodian-logs-bucket-1609/tmcc-sg-remove-ingress-open-to-world-realtime/{account_id}/{region}/{now}/
+    filters:
+      - type: ingress
+        Ports:
+          - 22
+          - 3389
+        Cidr: 0.0.0.0/0
+    actions:
+      - type: remove-permissions
+        ingress: matched

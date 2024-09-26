@@ -1,0 +1,36 @@
+policies:
+  - name: tmcc-restrict-default-sg-traffic
+    resource: security-group
+    description: |
+      To restrict inbound and outbound traffic for default security group
+    mode:
+      type: cloudtrail
+      role: arn:aws:iam::{account_id}:role/ak-ssm-role
+      events:
+        - source: ec2.amazonaws.com
+          event: CreateSecurityGroup
+          ids: responseElements.groupId
+        - source: ec2.amazonaws.com
+          event: ModifySecurityGroupRules
+          ids: requestParameters.ModifySecurityGroupRulesRequest.GroupId
+        - source: ec2.amazonaws.com
+          event: AuthorizeSecurityGroupIngress
+          ids: responseElements.securityGroupRuleSet.items[].groupId
+        - source: ec2.amazonaws.com
+          event: AuthorizeSecurityGroupEgress
+          ids: responseElements.securityGroupRuleSet.items[].groupId
+      execution-options:
+        output_dir: s3://custodian-logs-bucket-1609/tmcc-restrict-default-sg-traffic/{account_id}/{region}/{now}/
+    filters:
+      - type: value
+        key: GroupName
+        value: default
+      - or:
+        - type: ingress
+          IpProtocol: '-1'
+        - type: egress
+          IpProtocol: '-1'
+    actions:
+      - type: remove-permissions
+        ingress: matched
+        egress: matched

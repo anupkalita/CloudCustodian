@@ -1,0 +1,13 @@
+accounts:
+- account_id: '12345678907'
+  name: account-1
+  profile: default
+  regions:
+  - us-east-1
+  - us-west-2
+- account_id: '98765123321'
+  name: account-2
+  profile: account-2
+  regions:
+  - us-east-1
+  - us-west-2
