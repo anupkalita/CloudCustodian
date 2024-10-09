@@ -1,0 +1,129 @@
+<!DOCTYPE html>
+<html lang="en">
+
+
+{# You can set any mandatory tags here, and they will be formatted/outputted in the message #}
+{% set requiredTags = ['CreatorName', 'owner_email', 'OwnerEmail'] %}
+
+{# The macros below format some resource attributes for better presentation #}
+
+{% macro increment(dct, key, inc=1)%}
+    {% if dct.update({key: dct[key] + inc}) %} {% endif %}
+{% endmacro %}
+
+
+{% macro getTag(resource, tagKey) -%}
+	{% if resource.get('Tags') %}
+		{% for t in resource.get('Tags') %} 	
+			{%  if t.get('Key') == tagKey %}
+				{{ t.get('Value') }}    							
+			{% endif %}
+		{% endfor %}
+	{% endif %}
+{%- endmacro %}
+
+{% macro getEnvTag(resource) -%}
+	{% if resource.get('Tags') %}
+		{% for t in resource.get('Tags') %} 	
+			{%  if t.get('Key') == "env" or t.get('Key') == "Environment" %}
+				{{ t.get('Value') }}    							
+			{% endif %}
+		{% endfor %}
+	{% endif %}
+{%- endmacro %}
+	
+{% macro columnHeading(columnNames, tableWidth) -%}
+	<table style="border-collapse: collapse; font-family: arial, sans-serif;">
+	{% for columnName in columnNames %}
+		<th style="background-color: #e3edf9; padding: 8px; border: 1px solid rgb(231, 229, 229)">{{ columnName }}</th>
+	{% endfor %}
+{%- endmacro %}
+
+{# The macro below creates the table:
+   Formatting can be dependent on the column names that are passed in 
+#}
+{% macro columnData(resources, columnNames) -%}
+	{% for resource in resources %}
+    {{ increment(counter, 'counter') }}
+		<tr>
+		{% for columnName in columnNames %}
+			{% if columnName in requiredTags %}
+				<td style="padding: 8px; border: 1px solid rgb(231, 229, 229) ;">{{ getTag(resource,columnName) }}</td>
+            {% elif columnName == 'Resource Type' %}
+				<td style="padding: 8px; border: 1px solid rgb(231, 229, 229)">{{ policy['resource'] }}</td>
+			{% elif columnName == 'Resource Name' %}
+				<td style="padding: 8px; border: 1px solid rgb(231, 229, 229)">{{ getTag(resource,'Name') }}</td>	
+            {% elif columnName == 'Environment' %}
+				<td style="padding: 8px; border: 1px solid rgb(231, 229, 229)">{{ getEnvTag(resource) }}</td>	
+			{% elif columnName == 'Account' %}
+				<td style="padding: 8px; border: 1px solid rgb(231, 229, 229)">{{ account }}</td>
+            {% elif columnName == 'S.No' %}
+				<td style="padding: 8px; border: 1px solid rgb(231, 229, 229)">{{ counter['counter'] }}</td>	
+            {% elif columnName == 'Reason' %}
+				<td style="padding: 8px; border: 1px solid rgb(231, 229, 229)">{{ action['violation_desc'] }}</td>							
+			{% else %}
+				<td style="padding: 8px; border: 1px solid rgb(231, 229, 229)">{{ resource[columnName] }}</td>
+			{% endif %}
+		{% endfor %}
+		</tr>
+	{% endfor %}
+	</table>
+{%- endmacro %}
+
+{# Main #}
+{% macro createTable(columnNames, resources, tableWidth) %}
+	{{ columnHeading(columnNames, tableWidth) }}				
+	{{ columnData(resources, columnNames) }}
+{%- endmacro %}
+
+<head>
+<style type="text/css">
+</style>
+</head> 
+
+<body>
+
+{% set counter = {
+    'counter': 0,
+} %}
+
+<p>Hi,</p>
+   
+<p>I hope this message finds you well. As part of our ongoing efforts to optimize cloud resource utilization and ensure the highest levels of efficiency across our engineering organization, we have identified certain resources associated with your projects that are classified as obsolete based on our current usage analysis.</p>
+		
+{# Below, notifications for any resource-type can be formatted with specific columns #}	  				
+
+<h4>Affected Resources:</h4>
+{% if policy['resource'] == "rds" %}
+        {% set columnNames = ['S.No','DBInstanceArn','DBInstanceIdentifier','Resource Type','Account','Environment','Reason'] %}
+        {% set page_link =  "https://confluence.dkcorpit.com/display/SREUS/Eliminating+Unused+AWS+Resources"%}
+        {{ createTable(columnNames, resources, '110') }}					   
+		
+{% elif policy['resource'] == "ec2" %}
+		{% set columnNames = ['S.No','InstanceId','Resource Name','Resource Type','Account','Environment','Reason'] %}
+        {% set page_link =  "https://confluence.dkcorpit.com/display/SREUS/Eliminating+Unused+AWS+Resources"%}
+		{{ createTable(columnNames, resources, '110') }}
+
+{% elif policy['resource'] == "app-elb" %}
+		{% set columnNames = ['S.No','LoadBalancerArn','LoadBalancerName','Resource Type','Account','Environment','Reason'] %}
+        {% set page_link =  "https://confluence.dkcorpit.com/display/SREUS/Eliminating+Unused+AWS+Resources"%}
+		{{ createTable(columnNames, resources, '110') }}	
+
+
+
+{% endif %}
+
+
+<h3>{{  action['action_desc']  }}</h3>		
+
+<br>
+
+<h4>Action Required:</h4>
+<ol>
+<li><b>Review the List:</b> Please review the identified resources to confirm their status.</li>
+
+</ol>
+
+
+</body>
+</html>
