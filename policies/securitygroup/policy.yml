@@ -27,3 +27,4 @@ policies:
     actions:
       - type: remove-permissions
         ingress: matched
+
