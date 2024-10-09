@@ -4,7 +4,7 @@ on:
   push:
     branches:
       - main
-  workflow_dispatch: # Allows manual trigger from GitHub UI
+  workflow_dispatch:
   
 jobs:
   deploy:
@@ -22,3 +22,9 @@ jobs:
         pip install c7n
         pip install c7n-org
         pip install c7n-mailer
+
+    # Run securitygroup policies using
+    - name: Run securitygroup policies
+      run: |
+        source custodian/bin/activate
+        c7n-org run -c policies/securitygroup/accounts.yml -s securitygroup/ -u policies/securitygroup/policy.yml --cache-period=0

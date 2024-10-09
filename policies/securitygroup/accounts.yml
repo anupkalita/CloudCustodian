@@ -1,6 +1,11 @@
 accounts:
-- account_id: '1234567899'
-  name: account-1
-  role: arn:aws:iam::1234567899:role/CloudCustodianRole
+- account_id: '148761657429'
+  name: preprod
+  role: arn:aws:iam::148761657429:role/CloudCustodianRole
+  regions:
+  - us-east-1
+- account_id: '205930639293'
+  name: dev
+  role: arn:aws:iam::205930639293:role/CloudCustodianRole
   regions:
   - us-east-1

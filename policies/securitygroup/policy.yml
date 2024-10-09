@@ -5,7 +5,7 @@ policies:
     resource: security-group
     mode:
       type: cloudtrail
-      role: arn:aws:iam::{account_id}:role/CloudCustodianRole
+      role: arn:aws:iam::{account_id}:role/CloudCustodianExecutionRole
       events:
         - source: ec2.amazonaws.com
           event: CreateSecurityGroup
