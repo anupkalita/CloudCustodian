@@ -1,0 +1,30 @@
+name: Deploy Cloud Custodian Policies
+
+on:
+  push:
+    branches:
+      - main
+  workflow_dispatch: # Allows manual trigger from GitHub UI
+  
+jobs:
+  deploy:
+    runs-on: self-hosted
+    
+    steps:
+    # Checkout the repository
+    - name: Checkout Repository
+      uses: actions/checkout@v2
+
+    # Set up Python and Cloud Custodian
+    - name: Set up Python
+      uses: actions/setup-python@v2
+      with:
+        python-version: '3.x'
+
+    - name: Install Cloud Custodian
+      run: |
+        python3 -m venv custodian
+        source custodian/bin/activate
+        pip install c7n
+        pip install c7n-org
+        pip install c7n-mailer
