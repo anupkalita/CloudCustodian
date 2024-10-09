@@ -27,4 +27,5 @@ jobs:
     - name: Run securitygroup policies
       run: |
         source custodian/bin/activate
+        export AWS_DEFAULT_REGION=us-east-1
         c7n-org run -c policies/securitygroup/accounts.yml -s securitygroup/ -u policies/securitygroup/policy.yml --cache-period=0
