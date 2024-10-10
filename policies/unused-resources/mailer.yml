@@ -1,3 +1,3 @@
 queue_url: https://sqs.us-east-1.amazonaws.com/123456789012/cloudcustodian-sqs
-role: arn:aws:iam::123456789012:role/cloud-custodian
+role: arn:aws:iam::195275650105:role/SandboxEC2CloudCustodianRole
 from_address: noreply@tmcc.com
