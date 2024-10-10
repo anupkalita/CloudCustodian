@@ -33,7 +33,7 @@ jobs:
       run: |
         source custodian/bin/activate
         echo "Running c7n-mailer"
-        c7n-mailer --config policies/unused-resources/mailer.yml -t policies/unused-resources/templates
+        c7n-mailer --config policies/unused-resources/mailer.yml -t policies/unused-resources/templates --update-lambda
 
     # Validate and Run multiple Cloud Custodian policies
     - name: Validate and Run Cloud Custodian policies
