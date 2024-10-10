@@ -51,4 +51,3 @@ jobs:
           c7n-org run -c $folder/accounts.yml -s output/$folder/ -u $folder/policy.yml --cache-period=0
         done
 
-        
