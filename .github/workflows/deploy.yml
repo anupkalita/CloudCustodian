@@ -50,3 +50,4 @@ jobs:
           # If validation passes, run the policy using c7n-org
           c7n-org run -c $folder/accounts.yml -s output/$folder/ -u $folder/policy.yml --cache-period=0
         done
+        
