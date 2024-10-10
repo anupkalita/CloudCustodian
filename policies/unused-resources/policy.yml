@@ -3,7 +3,7 @@ policies:
     description: |
       To find Unused EC2 that has CPU Utlization under 10 % and Network Utilization under 5mb for 30 days.
     resource: ec2
-        mode:
+    mode:
       type: periodic
       schedule: "rate(1 day)"  # Adjust the schedule as needed
       role: arn:aws:iam::{account_id}:role/CloudCustodianExecutionRole
