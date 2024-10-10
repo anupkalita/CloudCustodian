@@ -3,6 +3,18 @@ policies:
     description: |
       To find Unused EC2 that has CPU Utlization under 10 % and Network Utilization under 5mb for 30 days.
     resource: ec2
+        mode:
+      type: periodic
+      schedule: "rate(1 day)"  # Adjust the schedule as needed
+      role: arn:aws:iam::{account_id}:role/CloudCustodianExecutionRole
+      memory: 2048
+      timeout: 900
+      environment: 
+          Variables:
+            AWS_RETRY_MODE: adaptive
+            AWS_MAX_ATTEMPTS: "10"
+      execution-options:
+        output_dir: s3://custodian-logs-bucket-1609/tmcc-unused-iam-user-credentials/{account_id}/{region}/{now}/
     filters:
       - "tag:cloud_custodian_unused": "absent"
       - State.Name : running
@@ -30,106 +42,106 @@ policies:
             days: 30
             value: 5242880
             op: less-than
-    actions:
-      - type: tag
-        tags:
-          cloud_custodian_unused: "True"
-      - type: notify
-        template: email-template.html
-        priority_header: '2'
-        subject: "Action Required: Obsolete Cloud Resources"
-        violation_desc: 'The EC2 is found Idle, CPU Utlization under 10 % and Network Utilization under 5mb for 30 days'
-        to:
-          - "{owner}"
-        cc: snagarajan@presidio.com
-        transport:
-          type: sqs
-          queue: https://sqs.us-east-1.amazonaws.com/123456789012/cloudcustodian-sqs
+    # actions:
+    #   - type: tag
+    #     tags:
+    #       cloud_custodian_unused: "True"
+    #   - type: notify
+    #     template: email-template.html
+    #     priority_header: '2'
+    #     subject: "Action Required: Obsolete Cloud Resources"
+    #     violation_desc: 'The EC2 is found Idle, CPU Utlization under 10 % and Network Utilization under 5mb for 30 days'
+    #     to:
+    #       - "{owner}"
+    #     cc: snagarajan@presidio.com
+    #     transport:
+    #       type: sqs
+    #       queue: https://sqs.us-east-1.amazonaws.com/123456789012/cloudcustodian-sqs
 
-  - name: tmcc-unused-app-elb
-    description: | 
-      To find Load Balancer ( App & Network ) that has no incoming request for 30 days.
-    resource: app-elb
-    filters:
-      - "tag:cloud_custodian_unused": "absent"
-      - and:
-        - "tag:ingress.k8s.aws/resource": "absent"
-        - type: value
-          key: "CreatedTime"
-          value_type: age
-          op: gt
-          value: 30
-        - type: metrics
-          name: RequestCount
-          days: 30
-          statistics: Sum
-          value: 0
-          op: equal
-    actions:
-      - type: tag
-        tags:
-          cloud_custodian_unused: "True"
-      - type: notify
-        template: email-template.html
-        priority_header: '2'
-        subject: "Action Required: Obsolete Cloud Resources"
-        violation_desc: 'The load balancer is found Idle, no incoming request for 30 days'
-        to:
-          - "{owner}"
-        cc: snagarajan@presidio.com
-        transport:
-          type: sqs
-          queue: https://sqs.us-east-1.amazonaws.com/123456789012/cloudcustodian-sqs
+  # - name: tmcc-unused-app-elb
+  #   description: | 
+  #     To find Load Balancer ( App & Network ) that has no incoming request for 30 days.
+  #   resource: app-elb
+  #   filters:
+  #     - "tag:cloud_custodian_unused": "absent"
+  #     - and:
+  #       - "tag:ingress.k8s.aws/resource": "absent"
+  #       - type: value
+  #         key: "CreatedTime"
+  #         value_type: age
+  #         op: gt
+  #         value: 30
+  #       - type: metrics
+  #         name: RequestCount
+  #         days: 30
+  #         statistics: Sum
+  #         value: 0
+  #         op: equal
+  #   actions:
+  #     - type: tag
+  #       tags:
+  #         cloud_custodian_unused: "True"
+  #     - type: notify
+  #       template: email-template.html
+  #       priority_header: '2'
+  #       subject: "Action Required: Obsolete Cloud Resources"
+  #       violation_desc: 'The load balancer is found Idle, no incoming request for 30 days'
+  #       to:
+  #         - "{owner}"
+  #       cc: snagarajan@presidio.com
+  #       transport:
+  #         type: sqs
+  #         queue: https://sqs.us-east-1.amazonaws.com/123456789012/cloudcustodian-sqs
 
-  - name: tmcc-unused-rds-instances
-    description: |
-      To find RDS instance with no DB connection for last 30 days and 
-      Max CPU Utilization <5% for last 30 days and
-      ReadIOPS & WriteIOPS is <5 count/sec for last 30 days
-    resource: rds
-    filters:
-      - "tag:cloud_custodian_unused": "absent"
-      - type: value
-        key: "InstanceCreateTime"
-        value_type: age
-        op: gt
-        value: 30
-      - and:
-        - type: metrics
-          name: DatabaseConnections
-          days: 30
-          value: 0
-          op: equal
-        - type: metrics
-          name: CPUUtilization
-          statistics: Maximum
-          days: 30
-          value: 5
-          op: lt
-        - type: metrics
-          name: ReadIOPS
-          statistics: Maximum
-          days: 30
-          value: 5
-          op: lt
-        - type: metrics
-          name: WriteIOPS
-          statistics: Maximum
-          days: 30
-          value: 5
-          op: lt
-    actions:
-      - type: tag
-        tags:
-          cloud_custodian_unused: "True"
-      - type: notify
-        template: email-template.html
-        priority_header: '2'
-        subject: "Action Required: Obsolete Cloud Resources"
-        violation_desc: 'RDS instance with no DB connection for last 30 days and Max CPU Utilization <5% for last 30 days and ReadIOPS & WriteIOPS is <5 count/sec for last 30 days'
-        to:
-          - "{owner}"
-        cc: snagarajan@presidio.com
-        transport:
-          type: sqs
-          queue: https://sqs.us-east-1.amazonaws.com/123456789012/cloudcustodian-sqs
+  # - name: tmcc-unused-rds-instances
+  #   description: |
+  #     To find RDS instance with no DB connection for last 30 days and 
+  #     Max CPU Utilization <5% for last 30 days and
+  #     ReadIOPS & WriteIOPS is <5 count/sec for last 30 days
+  #   resource: rds
+  #   filters:
+  #     - "tag:cloud_custodian_unused": "absent"
+  #     - type: value
+  #       key: "InstanceCreateTime"
+  #       value_type: age
+  #       op: gt
+  #       value: 30
+  #     - and:
+  #       - type: metrics
+  #         name: DatabaseConnections
+  #         days: 30
+  #         value: 0
+  #         op: equal
+  #       - type: metrics
+  #         name: CPUUtilization
+  #         statistics: Maximum
+  #         days: 30
+  #         value: 5
+  #         op: lt
+  #       - type: metrics
+  #         name: ReadIOPS
+  #         statistics: Maximum
+  #         days: 30
+  #         value: 5
+  #         op: lt
+  #       - type: metrics
+  #         name: WriteIOPS
+  #         statistics: Maximum
+  #         days: 30
+  #         value: 5
+  #         op: lt
+  #   actions:
+  #     - type: tag
+  #       tags:
+  #         cloud_custodian_unused: "True"
+  #     - type: notify
+  #       template: email-template.html
+  #       priority_header: '2'
+  #       subject: "Action Required: Obsolete Cloud Resources"
+  #       violation_desc: 'RDS instance with no DB connection for last 30 days and Max CPU Utilization <5% for last 30 days and ReadIOPS & WriteIOPS is <5 count/sec for last 30 days'
+  #       to:
+  #         - "{owner}"
+  #       cc: snagarajan@presidio.com
+  #       transport:
+  #         type: sqs
+  #         queue: https://sqs.us-east-1.amazonaws.com/123456789012/cloudcustodian-sqs

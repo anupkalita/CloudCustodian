@@ -10,22 +10,43 @@ jobs:
   deploy:
     runs-on: self-hosted
     
+    env:
+      AWS_DEFAULT_REGION: us-east-1
+      POLICY_FOLDERS: |
+        policies/securitygroup
+        policies/unused-resources
+
     steps:
     # Checkout the repository
     - name: Checkout Repository
       uses: actions/checkout@v2
 
+    # Install Cloud Custodian
     - name: Install Cloud Custodian
       run: |
         python3 -m venv custodian
         source custodian/bin/activate
-        pip install c7n
-        pip install c7n-org
-        pip install c7n-mailer
+        pip install c7n c7n-org c7n-mailer
 
-    # Run securitygroup policies using
-    - name: Run securitygroup policies
+    # Run c7n-mailer
+    - name: Run c7n-mailer
       run: |
         source custodian/bin/activate
-        export AWS_DEFAULT_REGION=us-east-1
-        c7n-org run -c policies/securitygroup/accounts.yml -s securitygroup/ -u policies/securitygroup/policy.yml --cache-period=0
+        echo "Running c7n-mailer"
+        c7n-mailer --config policies/unused-resources/mailer.yml -t policies/unused-resources/templates
+
+    # Validate and Run multiple Cloud Custodian policies
+    - name: Validate and Run Cloud Custodian policies
+      run: |
+        source custodian/bin/activate
+
+        # Loop through each policy folder and run the policies
+        for folder in $POLICY_FOLDERS; do
+          echo "Validating and running policies in $folder"
+
+          # Validate the policy
+          custodian validate $folder/policy.yml
+
+          # If validation passes, run the policy using c7n-org
+          c7n-org run -c $folder/accounts.yml -s output/$folder/ -u $folder/policy.yml --cache-period=0
+        done
